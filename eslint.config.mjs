@@ -5,6 +5,13 @@ const eslintConfig = [
   ...nextVitals,
   ...nextTypescript,
   {
+    settings: {
+      react: {
+        version: "18.3"
+      }
+    }
+  },
+  {
     ignores: [".next/**", "node_modules/**", "work/**", "outputs/**"]
   }
 ];

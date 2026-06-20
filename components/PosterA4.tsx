@@ -1,112 +1,184 @@
 import Image from "next/image";
-import PokemonTypeBadge from "@/components/PokemonTypeBadge";
-import { fanMadeNotice, typeAccentClasses } from "@/lib/pokemagique-data";
-import type { GeneratedProfile, PokemonStarterType } from "@/lib/types";
+import { fanMadeNotice } from "@/lib/pokemagique-data";
+import { getPosterContent } from "@/lib/poster-content";
+import { getPosterTheme, posterThemeStyle } from "@/lib/poster-theme";
+import type { GeneratedProfile } from "@/lib/types";
 
 interface PosterA4Props {
   profile: GeneratedProfile;
 }
 
-function MiniBox({ title, children }: { title: string; children: React.ReactNode }) {
+function PosterCard({
+  title,
+  icon,
+  children,
+  tone = "light"
+}: {
+  title: string;
+  icon: string;
+  children: React.ReactNode;
+  tone?: "light" | "peach" | "pink" | "gold";
+}) {
   return (
-    <div className="rounded-2xl border border-pokedex-ink/10 bg-white/88 p-3">
-      <div className="text-[10px] font-black uppercase tracking-[0.14em] text-pokedex-ink/55">
-        {title}
+    <section className={`poster-card poster-card-${tone}`}>
+      <div className="poster-card-title">
+        <span className="poster-card-icon">{icon}</span>
+        <span>{title}</span>
       </div>
-      <div className="mt-1 text-sm font-black leading-snug text-pokedex-ink">{children}</div>
+      <div className="poster-card-content">{children}</div>
+    </section>
+  );
+}
+
+function RarityBadge({ score, suffix }: { score: string; suffix: string }) {
+  return (
+    <div className="rarity-badge" aria-label={`Note de rareté ${score} ${suffix}`}>
+      <div className="rarity-stars">★ ★ ★</div>
+      <div className="rarity-score">{score}</div>
+      <div className="rarity-suffix">{suffix}</div>
+      <div className="rarity-ribbon">Collector</div>
     </div>
   );
 }
 
-export default function PosterA4({ profile }: PosterA4Props) {
-  const gradient =
-    typeAccentClasses[profile.typePrincipal as PokemonStarterType] ??
-    "from-pokedex-blue via-pokedex-green to-pokedex-yellow";
+function PokemonHero({ profile }: { profile: GeneratedProfile }) {
   const artworkUrl = profile.pokemonArtwork?.imageUrl;
 
   return (
-    <article
-      className={`poster-shadow mx-auto aspect-[210/297] w-full max-w-[620px] overflow-hidden rounded-[1.75rem] border-[10px] border-pokedex-ink bg-gradient-to-br ${gradient} p-4 text-pokedex-ink`}
-    >
-      <div className="flex h-full flex-col rounded-[1.25rem] border-4 border-white/75 bg-pokedex-cream/92 p-4">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-pokedex-red">
-              Ton Pokémagique
-            </p>
-            <h2 className="mt-1 text-4xl font-black leading-none">{profile.nomPokemagique}</h2>
-            <p className="mt-2 text-lg font-bold text-pokedex-ink/72">
-              Fiche de {profile.prenomOuPseudo}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white/86 p-3 text-right shadow-sm">
-            <div className="text-xs font-black uppercase tracking-[0.16em] text-pokedex-ink/55">
-              Rareté
+    <section className="poster-center-pokemon">
+      <div className="poster-hero-ring" />
+      <div className="poster-hero-orbit poster-hero-orbit-one" />
+      <div className="poster-hero-orbit poster-hero-orbit-two" />
+      <div className="poster-splash poster-splash-left" />
+      <div className="poster-splash poster-splash-right" />
+
+      {artworkUrl ? (
+        <Image
+          src={artworkUrl}
+          alt={profile.pokemonAffiche}
+          width={980}
+          height={980}
+          unoptimized
+          priority
+          className="poster-pokemon-image"
+        />
+      ) : (
+        <div className="poster-pokemon-placeholder">
+          <strong>{profile.pokemonAffiche}</strong>
+          <span>Image PokéAPI indisponible</span>
+        </div>
+      )}
+
+      <div className="poster-pokemon-nameplate">
+        Pokémon affiché : <strong>{profile.pokemonAffiche}</strong>
+      </div>
+    </section>
+  );
+}
+
+export default function PosterA4({ profile }: PosterA4Props) {
+  const theme = getPosterTheme(profile);
+  const content = getPosterContent(profile);
+
+  return (
+    <article className="poster-shell poster-shadow" style={posterThemeStyle(theme)}>
+      <div className="poster-background" aria-hidden="true">
+        {Array.from({ length: 22 }).map((_, index) => (
+          <span
+            key={index}
+            className={`poster-particle poster-particle-${theme.particleClass}`}
+          />
+        ))}
+        <span className="poster-wave poster-wave-one" />
+        <span className="poster-wave poster-wave-two" />
+        <span className="poster-region-stamp">{theme.regionLabel}</span>
+      </div>
+
+      <div className="poster-frame">
+        <header className="poster-header">
+          <div className="poster-title-block">
+            <p className="poster-eyebrow">Ton Pokémagique</p>
+            <h2 className="poster-title">{profile.nomPokemagique}</h2>
+            <div className="poster-ribbon">
+              {profile.generation} • Type {profile.typePrincipal}
             </div>
-            <div className="text-3xl font-black text-pokedex-red">
-              {profile.miniResumeAffiche.noteRarete}
-            </div>
+            <div className="poster-ascendant-pill">Ascendant {profile.ascendantRegional}</div>
           </div>
+          <RarityBadge score={content.rarityScore} suffix={content.raritySuffix} />
         </header>
 
-        <div className="mt-4 grid grid-cols-3 gap-3">
-          <MiniBox title="Génération">{profile.generation}</MiniBox>
-          <MiniBox title="Origine">{profile.regionOrigine}</MiniBox>
-          <MiniBox title="Ascendant">{profile.ascendantRegional}</MiniBox>
-        </div>
+        <main className="poster-main">
+          <aside className="poster-left-panel">
+            <section className="poster-calculation-note">
+              <div className="poster-paper-holes" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="poster-note-title">
+                <span className="poster-card-icon">DX</span>
+                Comment j’ai calculé ?
+              </div>
+              <ul>
+                {content.calculationLines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+              <p>{content.starterLine}</p>
+            </section>
 
-        <section className="relative my-4 flex flex-1 items-center justify-center overflow-hidden rounded-[1.25rem] border-4 border-white bg-gradient-to-br from-white via-white/70 to-white/35">
-          <div className="absolute inset-0 opacity-55">
-            <div className="absolute left-8 top-7 h-24 w-24 rounded-full bg-pokedex-yellow/60 blur-2xl" />
-            <div className="absolute bottom-10 right-10 h-28 w-28 rounded-full bg-pokedex-blue/35 blur-2xl" />
-            <div className="absolute inset-x-8 bottom-8 h-2 rounded-full bg-white/80" />
-          </div>
-
-          {artworkUrl ? (
-            <Image
-              src={artworkUrl}
-              alt={profile.pokemonAffiche}
-              width={720}
-              height={720}
-              unoptimized
-              className="relative z-10 max-h-[78%] max-w-[78%] object-contain drop-shadow-[0_22px_26px_rgba(18,33,58,0.24)]"
-            />
-          ) : (
-            <div className="relative z-10 rounded-3xl border-4 border-dashed border-pokedex-ink/20 bg-white/80 px-8 py-10 text-center">
-              <div className="text-2xl font-black">{profile.pokemonAffiche}</div>
-              <p className="mt-2 max-w-[16rem] text-sm font-semibold text-pokedex-ink/60">
-                Image PokéAPI indisponible pour le moment.
-              </p>
+            <div className="poster-mini-label">
+              <strong>{theme.particleLabel}</strong>
+              <span>{theme.regionMotif}</span>
             </div>
-          )}
+          </aside>
+
+          <PokemonHero profile={profile} />
+
+          <aside className="poster-right-panels">
+            <PosterCard title="Qualités" icon="QL" tone="gold">
+              <ul className="poster-chip-list">
+                {content.qualities.map((quality) => (
+                  <li key={quality}>{quality}</li>
+                ))}
+              </ul>
+            </PosterCard>
+
+            <PosterCard title="Défauts" icon="DF" tone="peach">
+              <ul className="poster-chip-list">
+                {content.defects.map((defect) => (
+                  <li key={defect}>{defect}</li>
+                ))}
+              </ul>
+            </PosterCard>
+
+            <PosterCard title="En amour" icon="CO" tone="pink">
+              <ul className="poster-love-list">
+                {content.loveLines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </PosterCard>
+          </aside>
+        </main>
+
+        <section className="poster-bottom-grid">
+          {content.bottomCards.map((card) => (
+            <article
+              key={card.title}
+              className={`poster-bottom-card poster-bottom-card-${card.variant}`}
+            >
+              <div className="poster-bottom-icon">{card.icon}</div>
+              <div>
+                <h3>{card.title}</h3>
+                <p className="poster-bottom-value">{card.value}</p>
+                {card.detail ? <p className="poster-bottom-detail">{card.detail}</p> : null}
+              </div>
+            </article>
+          ))}
         </section>
 
-        <div className="mb-3 flex flex-wrap gap-2">
-          <PokemonTypeBadge type={profile.typePrincipal} />
-          {profile.typeSecondaire ? <PokemonTypeBadge type={profile.typeSecondaire} /> : null}
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <MiniBox title="Comment j’ai calculé ?">
-            {profile.calculDetaille.annee} / {profile.calculDetaille.mois} /{" "}
-            {profile.calculDetaille.jour}
-          </MiniBox>
-          <MiniBox title="Qualités">{profile.miniResumeAffiche.qualites.join(", ")}</MiniBox>
-          <MiniBox title="Défauts">{profile.miniResumeAffiche.defauts.join(", ")}</MiniBox>
-          <MiniBox title="En amour">{profile.miniResumeAffiche.amourCourt}</MiniBox>
-          <MiniBox title="En amitié">{profile.miniResumeAffiche.amitieCourt}</MiniBox>
-          <MiniBox title="Au travail">{profile.miniResumeAffiche.travailCourt}</MiniBox>
-          <MiniBox title="Ta devise">{profile.miniResumeAffiche.deviseCourte}</MiniBox>
-          <MiniBox title="Légendaire compatible">
-            {profile.miniResumeAffiche.legendaireCompatible}
-          </MiniBox>
-          <MiniBox title="Surnom rigolo">{profile.miniResumeAffiche.surnom}</MiniBox>
-          <MiniBox title="Habitat">{profile.miniResumeAffiche.habitatCourt}</MiniBox>
-        </div>
-
-        <footer className="mt-3 text-center text-[10px] font-bold text-pokedex-ink/58">
-          {fanMadeNotice}
-        </footer>
+        <footer className="poster-footer">{fanMadeNotice}</footer>
       </div>
     </article>
   );
